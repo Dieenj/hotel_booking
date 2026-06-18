@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router'
-import { Eye, EyeOff, Building2 } from 'lucide-react'
+import { Eye, EyeOff, Building2, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
@@ -42,6 +42,13 @@ export function LoginPage() {
             <Building2 className="h-8 w-8 text-primary" />
             <span className="text-2xl font-semibold text-primary">StayEase</span>
           </div>
+        </div>
+
+        <div className="flex justify-center mb-4">
+          <Link to="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
         </div>
 
         <Card>
