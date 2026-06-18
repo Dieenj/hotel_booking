@@ -1,0 +1,37 @@
+# ===== Backend (Spring Boot / Maven) =====
+backend/target/
+backend/.mvn/
+backend/*.class
+backend/*.jar
+backend/*.war
+*.iml
+.idea/
+*.iws
+*.ipr
+
+# ===== Frontend (Node / Vite) =====
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ===== Editor =====
+.vscode/settings.json
+*.suo
+*.user
+
+# ===== Logs =====
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# ===== Secrets =====
+*.env
+application-local.properties
+application-secret.properties
