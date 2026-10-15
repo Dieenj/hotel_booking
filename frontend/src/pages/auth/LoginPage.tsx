@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { getErrorMessage } from '@/lib/utils'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -28,8 +29,9 @@ export function LoginPage() {
       const res = await authApi.login({ email, password })
       login(res.token, res.user)
       navigate(res.user.role === 'ADMIN' ? '/admin' : from, { replace: true })
-    } catch {
-      setError('Invalid email or password')
+    } catch (err: unknown) {
+      // Also shows the lockout message after too many failed attempts (429).
+      setError(getErrorMessage(err, 'Invalid email or password'))
     } finally {
       setLoading(false)
     }

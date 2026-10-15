@@ -10,6 +10,7 @@ import com.hotelbooking.common.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -30,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final LoginAttemptService loginAttemptService;
 
     @Transactional
     @Override
@@ -52,10 +54,16 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(normalizeEmail(request.getEmail()), request.getPassword())
-        );
-        User user = userRepository.getByEmailOrThrow(normalizeEmail(request.getEmail()));
+        String email = normalizeEmail(request.getEmail());
+        loginAttemptService.checkAllowed(email);
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.getPassword()));
+        } catch (BadCredentialsException ex) {
+            loginAttemptService.recordFailure(email);
+            throw ex;
+        }
+        loginAttemptService.recordSuccess(email);
+        User user = userRepository.getByEmailOrThrow(email);
         return buildAuthResponse(user, generateToken(user));
     }
 

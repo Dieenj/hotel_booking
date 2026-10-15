@@ -3,6 +3,7 @@ package com.hotelbooking.common.exception;
 import com.hotelbooking.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -50,6 +51,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Invalid email or password"));
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTooManyRequests(TooManyRequestsException ex) {
+        long seconds = Math.max(1, ex.getRetryAfter().toSeconds());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(seconds))
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(DisabledException.class)

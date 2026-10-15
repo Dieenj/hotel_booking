@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,6 +31,25 @@ class InputValidationIntegrationTest extends IntegrationTestSupport {
                         .content(json(Map.of("email", local.toLowerCase() + "@TEST.com", "password", PASSWORD))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.email").value(local.toLowerCase() + "@test.com"));
+    }
+
+    @Test
+    void repeatedFailedLoginsAreThrottled() throws Exception {
+        String email = "throttle-" + UUID.randomUUID() + "@test.com";
+        registerGuest(email);
+        String wrong = json(Map.of("email", email, "password", "wrong-password"));
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content(wrong))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        // Locked out even with the right password.
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("email", email, "password", PASSWORD))))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().exists("Retry-After"))
+                .andExpect(jsonPath("$.error").value("Too many failed login attempts. Try again later."));
     }
 
     @Test
