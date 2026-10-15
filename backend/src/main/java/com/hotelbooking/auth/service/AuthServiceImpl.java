@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
 import java.util.Map;
 
 @Service
@@ -33,13 +34,14 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        String email = normalizeEmail(request.getEmail());
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new BusinessException("Email already registered", HttpStatus.CONFLICT);
         }
 
         User user = User.builder()
                 .fullName(request.getFullName())
-                .email(request.getEmail())
+                .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
                 .build();
@@ -51,9 +53,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(normalizeEmail(request.getEmail()), request.getPassword())
         );
-        User user = userRepository.getByEmailOrThrow(request.getEmail());
+        User user = userRepository.getByEmailOrThrow(normalizeEmail(request.getEmail()));
         return buildAuthResponse(user, generateToken(user));
     }
 
@@ -71,6 +73,10 @@ public class AuthServiceImpl implements AuthService {
         user.setPhone(phone);
         userRepository.save(user);
         return buildAuthResponse(user, null);
+    }
+
+    private static String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 
     private String generateToken(User user) {
