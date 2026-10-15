@@ -1,5 +1,10 @@
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
+/** Shape returned by the backend for login/register: the profile plus a JWT. */
+export interface UserWithTokenResponse extends UserProfile {
+  token: string
+}
+
 export interface AuthResponse {
   token: string
   user: UserProfile
@@ -11,8 +16,6 @@ export interface UserProfile {
   fullName: string
   phone: string | null
   role: 'GUEST' | 'ADMIN'
-  active: boolean
-  createdAt: string
 }
 
 export interface RegisterRequest {
@@ -40,8 +43,8 @@ export interface HotelResponse {
   amenities: string[]
   images: string[]
   active: boolean
-  averageRating?: number
-  totalReviews?: number
+  averageRating?: number | null
+  reviewCount?: number | null
   createdAt: string
 }
 
@@ -63,13 +66,13 @@ export interface RoomTypeResponse {
   name: string
   description: string
   maxCapacity: number
-  areaM2: number
-  basePricePerNight: number
+  area: number | null
+  basePrice: number
   totalRooms: number
   active: boolean
   amenities: string[]
   images: string[]
-  availableRooms?: number
+  availableRooms?: number | null
   hotelId: number
   hotelName: string
 }
@@ -78,8 +81,8 @@ export interface RoomTypeRequest {
   name: string
   description: string
   maxCapacity: number
-  areaM2: number
-  basePricePerNight: number
+  area?: number
+  basePrice: number
   totalRooms: number
   amenities: string[]
   images: string[]
@@ -92,10 +95,14 @@ export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'COMPLETED'
 export interface BookingResponse {
   id: number
   bookingCode: string
-  user: UserProfile
-  roomType: RoomTypeResponse
+  roomTypeId: number
+  roomTypeName: string
+  hotelId: number
+  hotelName: string
+  hotelAddress: string
   checkIn: string
   checkOut: string
+  nights: number
   guests: number
   totalPrice: number
   status: BookingStatus
@@ -122,7 +129,7 @@ export interface BookingRequest {
 export interface ReviewResponse {
   id: number
   userId: number
-  userFullName: string
+  userName: string
   hotelId: number
   bookingId: number
   rating: number
@@ -175,7 +182,7 @@ export interface PageResponse<T> {
 
 export interface ApiResponse<T> {
   success: boolean
-  message: string
+  message?: string
+  error?: string
   data: T
-  timestamp: string
 }

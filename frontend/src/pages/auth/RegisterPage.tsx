@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { getErrorMessage } from '@/lib/utils'
 
 export function RegisterPage() {
   const [form, setForm] = useState({
@@ -45,8 +46,7 @@ export function RegisterPage() {
       login(res.token, res.user)
       navigate('/')
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(msg || 'Registration failed. Please try again.')
+      setError(getErrorMessage(err, 'Registration failed. Please try again.'))
     } finally {
       setLoading(false)
     }

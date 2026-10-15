@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageSpinner } from '@/components/shared/Spinner'
-import { formatCurrency, calcNights } from '@/lib/utils'
+import { formatCurrency, calcNights, getErrorMessage } from '@/lib/utils'
 
 export function BookingPage() {
   const [searchParams] = useSearchParams()
@@ -38,7 +38,7 @@ export function BookingPage() {
   })
 
   const nights = form.checkIn && form.checkOut ? calcNights(form.checkIn, form.checkOut) : 0
-  const total = roomType ? nights * roomType.basePricePerNight : 0
+  const total = roomType ? nights * roomType.basePrice : 0
 
   useEffect(() => {
     if (!roomTypeId) {
@@ -89,8 +89,7 @@ export function BookingPage() {
       })
       navigate(`/payment/${booking.id}`)
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(msg || 'Failed to create booking. Please try again.')
+      setError(getErrorMessage(err, 'Failed to create booking. Please try again.'))
     } finally {
       setSubmitting(false)
     }
@@ -224,7 +223,7 @@ export function BookingPage() {
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Price/night</span>
-                  <span>{formatCurrency(roomType.basePricePerNight)}</span>
+                  <span>{formatCurrency(roomType.basePrice)}</span>
                 </div>
               </div>
 

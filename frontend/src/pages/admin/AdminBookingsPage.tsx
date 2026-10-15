@@ -94,8 +94,8 @@ export function AdminBookingsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div>
-                      <p className="font-medium">{b.roomType.hotelName}</p>
-                      <p className="text-xs text-muted-foreground">{b.roomType.name}</p>
+                      <p className="font-medium">{b.hotelName}</p>
+                      <p className="text-xs text-muted-foreground">{b.roomTypeName}</p>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">

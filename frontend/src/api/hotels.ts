@@ -20,17 +20,17 @@ export const hotelsApi = {
   },
 
   create: async (data: HotelRequest): Promise<HotelResponse> => {
-    const res = await client.post<ApiResponse<HotelResponse>>('/hotels', data)
+    const res = await client.post<ApiResponse<HotelResponse>>('/admin/hotels', data)
     return res.data.data
   },
 
   update: async (id: number, data: HotelRequest): Promise<HotelResponse> => {
-    const res = await client.put<ApiResponse<HotelResponse>>(`/hotels/${id}`, data)
+    const res = await client.put<ApiResponse<HotelResponse>>(`/admin/hotels/${id}`, data)
     return res.data.data
   },
 
   delete: async (id: number): Promise<void> => {
-    await client.delete(`/hotels/${id}`)
+    await client.delete(`/admin/hotels/${id}`)
   },
 
   getRoomTypes: async (
@@ -46,7 +46,7 @@ export const hotelsApi = {
 
   createRoomType: async (hotelId: number, data: RoomTypeRequest): Promise<RoomTypeResponse> => {
     const res = await client.post<ApiResponse<RoomTypeResponse>>(
-      `/hotels/${hotelId}/room-types`,
+      `/admin/hotels/${hotelId}/room-types`,
       data
     )
     return res.data.data
@@ -54,14 +54,14 @@ export const hotelsApi = {
 
   updateRoomType: async (roomTypeId: number, data: RoomTypeRequest): Promise<RoomTypeResponse> => {
     const res = await client.put<ApiResponse<RoomTypeResponse>>(
-      `/room-types/${roomTypeId}`,
+      `/admin/room-types/${roomTypeId}`,
       data
     )
     return res.data.data
   },
 
   deleteRoomType: async (roomTypeId: number): Promise<void> => {
-    await client.delete(`/room-types/${roomTypeId}`)
+    await client.delete(`/admin/room-types/${roomTypeId}`)
   },
 
   getRoomTypeById: async (roomTypeId: number): Promise<RoomTypeResponse> => {

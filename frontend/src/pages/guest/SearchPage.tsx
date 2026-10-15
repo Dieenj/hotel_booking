@@ -184,8 +184,8 @@ export function SearchPage() {
                           <span className="text-sm font-medium">
                             {hotel.averageRating?.toFixed(1) || hotel.starRating}
                           </span>
-                          {hotel.totalReviews !== undefined && (
-                            <span className="text-xs text-muted-foreground">({hotel.totalReviews})</span>
+                          {hotel.reviewCount != null && (
+                            <span className="text-xs text-muted-foreground">({hotel.reviewCount})</span>
                           )}
                         </div>
                       </div>

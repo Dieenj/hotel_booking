@@ -84,8 +84,8 @@ export function MyBookingsPage() {
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <p className="font-semibold">{booking.roomType.hotelName}</p>
-                    <p className="text-sm text-muted-foreground">{booking.roomType.name}</p>
+                    <p className="font-semibold">{booking.hotelName}</p>
+                    <p className="text-sm text-muted-foreground">{booking.roomTypeName}</p>
                   </div>
                   <StatusBadge status={booking.status} />
                 </div>

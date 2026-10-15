@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageSpinner } from '@/components/shared/Spinner'
-import { cn } from '@/lib/utils'
+import { cn, getErrorMessage } from '@/lib/utils'
 
 function RatingInput({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
@@ -68,8 +68,7 @@ export function WriteReviewPage() {
       })
       navigate('/my-bookings')
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(msg || 'Failed to submit review')
+      setError(getErrorMessage(err, 'Failed to submit review'))
     } finally {
       setSubmitting(false)
     }
@@ -84,8 +83,8 @@ export function WriteReviewPage() {
 
       <Card className="mb-4">
         <CardContent className="pt-4">
-          <p className="font-medium">{booking.roomType.hotelName}</p>
-          <p className="text-sm text-muted-foreground">{booking.roomType.name}</p>
+          <p className="font-medium">{booking.hotelName}</p>
+          <p className="text-sm text-muted-foreground">{booking.roomTypeName}</p>
           <p className="text-xs text-muted-foreground mt-1">
             {booking.checkIn} → {booking.checkOut}
           </p>
