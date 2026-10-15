@@ -73,9 +73,6 @@ spring:
     hikari:
       maximum-pool-size: 5
   jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: update
     show-sql: false
 
 server:
@@ -96,7 +93,15 @@ app:
 cd backend
 mvnd spring-boot:run
 # or: mvn spring-boot:run
+# With demo data (6 hotels + accounts) on an empty database:
+# SPRING_PROFILES_ACTIVE=local,dev mvn spring-boot:run
 ```
+
+The schema is managed by Flyway (`src/main/resources/db/migration`); Hibernate only validates it.
+A database created earlier by `ddl-auto: update` is baselined at V1 automatically on first start —
+remove any `ddl-auto: update` from your `application-local.yml`.
+
+Demo accounts (profile `dev`): `admin@stayease.dev` / `admin123`, `guest@stayease.dev` / `guest123`.
 
 API runs at `http://localhost:8081`. Swagger UI: `http://localhost:8081/swagger-ui.html`
 

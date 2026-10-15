@@ -2,17 +2,20 @@
 # to run the same suite against PostgreSQL, as CI does — some bugs only show up there.
 spring:
   datasource:
-    url: ${TEST_DB_URL:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1}
+    url: ${TEST_DB_URL:jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1}
     username: ${TEST_DB_USERNAME:sa}
     password: ${TEST_DB_PASSWORD:}
   jpa:
     # Same as the documented local/production config: no lazy loading outside transactions.
     open-in-view: false
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     properties:
       hibernate:
         generate_statistics: true
+  flyway:
+    # Tests start from an empty schema every run (see FlywayTestConfig).
+    clean-disabled: false
   mail:
     host: localhost
     port: 25
