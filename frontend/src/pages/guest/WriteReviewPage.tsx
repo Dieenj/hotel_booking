@@ -49,7 +49,7 @@ export function WriteReviewPage() {
       .then(setBooking)
       .catch(() => navigate('/my-bookings'))
       .finally(() => setLoading(false))
-  }, [bookingId])
+  }, [bookingId, navigate])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

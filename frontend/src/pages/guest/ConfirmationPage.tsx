@@ -20,7 +20,7 @@ export function ConfirmationPage() {
       .then(setBooking)
       .catch(() => navigate('/'))
       .finally(() => setLoading(false))
-  }, [bookingId])
+  }, [bookingId, navigate])
 
   if (loading) return <PageSpinner />
   if (!booking) return null

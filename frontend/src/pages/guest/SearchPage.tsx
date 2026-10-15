@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { MapPin, Star, Search, SlidersHorizontal } from 'lucide-react'
 import { hotelsApi } from '@/api/hotels'
@@ -26,29 +26,29 @@ export function SearchPage() {
 
   const SIZE = 9
 
+  const fetchHotels = useCallback(
+    () =>
+      hotelsApi
+        .search({
+          city: searchParams.get('city') || undefined,
+          name: searchParams.get('name') || undefined,
+          minRating,
+          page,
+          size: SIZE,
+          sort,
+        })
+        .then((res) => {
+          setHotels(res.content)
+          setTotalElements(res.totalElements)
+        })
+        .catch(() => setHotels([]))
+        .finally(() => setLoading(false)),
+    [page, sort, minRating, searchParams]
+  )
+
   useEffect(() => {
     fetchHotels()
-  }, [page, sort, minRating, searchParams])
-
-  async function fetchHotels() {
-    setLoading(true)
-    try {
-      const res = await hotelsApi.search({
-        city: searchParams.get('city') || undefined,
-        name: searchParams.get('name') || undefined,
-        minRating,
-        page,
-        size: SIZE,
-        sort,
-      })
-      setHotels(res.content)
-      setTotalElements(res.totalElements)
-    } catch {
-      setHotels([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [fetchHotels])
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()

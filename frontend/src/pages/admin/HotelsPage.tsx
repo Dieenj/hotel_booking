@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { Plus, Edit, Trash2, Star } from 'lucide-react'
 import { hotelsApi } from '@/api/hotels'
@@ -12,19 +12,18 @@ export function HotelsPage() {
   const [hotels, setHotels] = useState<HotelResponse[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchHotels()
-  }, [])
-
-  async function fetchHotels() {
-    setLoading(true)
+  const fetchHotels = useCallback(async () => {
     try {
       const res = await hotelsApi.search({ page: 0, size: 50 })
       setHotels(res.content)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchHotels()
+  }, [fetchHotels])
 
   async function handleDelete(id: number, name: string) {
     if (!confirm(`Delete "${name}"? This will remove all associated room types.`)) return

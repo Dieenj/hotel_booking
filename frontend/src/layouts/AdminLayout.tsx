@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router'
 import { Building2, LayoutDashboard, Hotel, BookOpen, LogOut } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/useAuth'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [

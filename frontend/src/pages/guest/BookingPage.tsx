@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router'
 import { hotelsApi } from '@/api/hotels'
 import { bookingsApi } from '@/api/bookings'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/useAuth'
 import type { RoomTypeResponse } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -50,18 +50,7 @@ export function BookingPage() {
       .then(setRoomType)
       .catch(() => navigate('/'))
       .finally(() => setLoading(false))
-  }, [roomTypeId])
-
-  useEffect(() => {
-    if (user) {
-      setForm((prev) => ({
-        ...prev,
-        guestName: user.fullName,
-        guestEmail: user.email,
-        guestPhone: user.phone || '',
-      }))
-    }
-  }, [user])
+  }, [roomTypeId, navigate])
 
   function update(field: string) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { bookingsApi } from '@/api/bookings'
 import type { BookingResponse, BookingStatus } from '@/types'
@@ -20,19 +20,18 @@ export function MyBookingsPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<BookingStatus | undefined>(undefined)
 
-  useEffect(() => {
-    fetchBookings()
-  }, [activeTab])
-
-  async function fetchBookings() {
-    setLoading(true)
+  const fetchBookings = useCallback(async () => {
     try {
       const res = await bookingsApi.getMyBookings({ status: activeTab, page: 0, size: 20 })
       setBookings(res.content)
     } finally {
       setLoading(false)
     }
-  }
+  }, [activeTab])
+
+  useEffect(() => {
+    fetchBookings()
+  }, [fetchBookings])
 
   async function handleCancel(bookingId: number) {
     if (!confirm('Are you sure you want to cancel this booking?')) return

@@ -51,7 +51,7 @@ export function HotelFormPage() {
         })
       })
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, isEdit])
 
   function update(field: keyof HotelRequest) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>

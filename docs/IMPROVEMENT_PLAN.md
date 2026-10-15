@@ -18,6 +18,19 @@ Tài liệu này chia các vấn đề phát hiện khi review repo thành từn
 | `pnpm build` (frontend) | ✅ pass |
 | `pnpm lint` (frontend) | ❌ 18 errors, 8 warnings |
 
+**Trạng thái**
+
+| Phase | Trạng thái |
+|---|---|
+| 0 — Hợp đồng API FE↔BE | ✅ Xong |
+| 1 — Logic đặt phòng | ✅ Xong |
+| 2 — Bảo mật & API | ✅ Xong |
+| 3 — Hiệu năng | ✅ Xong (+ phát hiện thêm: lỗi `LazyInitializationException` khi `open-in-view: false`) |
+| 4 — Test, CI, lint | ✅ Xong (+ sửa sort/giá hardcode ở trang tìm kiếm) |
+| 5 — Backlog | ⏸ Chờ quyết định |
+
+Sau khi hoàn tất: `mvn verify` 26 test pass · `pnpm lint` 0 lỗi/0 cảnh báo · `pnpm build` pass.
+
 ---
 
 ## Phase 0 — Khôi phục hợp đồng API Frontend ↔ Backend  🔴 (ưu tiên cao nhất)
@@ -105,6 +118,7 @@ không đặt được; expire PENDING; complete → review được; đổi `to
 | 3.2 | N+1 khi map `Booking → roomType → hotel` và `@ElementCollection` EAGER | `hibernate.default_batch_fetch_size: 50` + `@EntityGraph` cho các query danh sách booking. |
 | 3.3 | `findAllByFilters` vừa `ORDER BY` trong JPQL vừa sort trong `Pageable` | Bỏ `ORDER BY` trong JPQL. |
 | 3.4 | `getAvailableRooms` 1 query/ngày | Đã xử lý ở Phase 1 (1 query cho cả khoảng). |
+| 3.5 | *(phát hiện khi làm)* Cấu hình trong README dùng `open-in-view: false`, nhưng service không mở transaction → `GET /api/bookings/{id}` và các API đọc khác ném `LazyInitializationException` | `@Transactional(readOnly = true)` cấp class cho các service; tắt `open-in-view` mặc định; test chạy với `open-in-view: false`. |
 
 ---
 
@@ -124,10 +138,11 @@ không đặt được; expire PENDING; complete → review được; đổi `to
 Các mục cần quyết định sản phẩm hoặc thay đổi lớn — để bạn chọn:
 
 - **Flyway/Liquibase** thay `ddl-auto: update` (cần chụp schema hiện tại trên Supabase làm baseline).
-- **Tìm kiếm theo ngày/số khách** (README có ghi nhưng API chưa hỗ trợ).
+- **Tìm kiếm theo ngày/số khách** (README có ghi nhưng API chưa hỗ trợ). Kèm sort theo giá.
+- Đổi bộ lọc ở trang danh sách hiện giữ kết quả cũ đến khi có dữ liệu mới (không còn spinner) và chưa huỷ request cũ — cân nhắc dùng TanStack Query.
+- Chính sách mật khẩu (hiện tối thiểu 6 ký tự).
 - **Refresh token** (`refresh-expiration` đã cấu hình nhưng chưa dùng).
 - **Màn hình admin quản lý room type** (API client có nhưng chưa có page nào dùng).
 - Gửi email xác nhận (`spring-boot-starter-mail` đã có nhưng chưa dùng).
 - Xử lý booking tương lai khi xoá hotel (hiện tại vẫn giữ nguyên, admin tự huỷ).
 - Code-splitting frontend (bundle 834 kB), thêm service frontend vào `docker-compose`.
-- Tắt `spring.jpa.open-in-view` sau khi thêm `@Transactional(readOnly = true)` cho các hàm đọc.

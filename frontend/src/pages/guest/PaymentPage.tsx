@@ -33,7 +33,7 @@ export function PaymentPage() {
       .then(setBooking)
       .catch(() => navigate('/my-bookings'))
       .finally(() => setLoading(false))
-  }, [bookingId])
+  }, [bookingId, navigate])
 
   function updateCard(field: string) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>

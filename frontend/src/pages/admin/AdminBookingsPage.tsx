@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { bookingsApi } from '@/api/bookings'
 import type { BookingResponse, BookingStatus } from '@/types'
 import { Button } from '@/components/ui/button'
@@ -22,12 +22,7 @@ export function AdminBookingsPage() {
   const [total, setTotal] = useState(0)
   const SIZE = 20
 
-  useEffect(() => {
-    fetchBookings()
-  }, [status, page])
-
-  async function fetchBookings() {
-    setLoading(true)
+  const fetchBookings = useCallback(async () => {
     try {
       const res = await bookingsApi.adminGetAll({ status, page, size: SIZE })
       setBookings(res.content)
@@ -35,7 +30,11 @@ export function AdminBookingsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [status, page])
+
+  useEffect(() => {
+    fetchBookings()
+  }, [fetchBookings])
 
   async function handleConfirm(id: number) {
     await bookingsApi.adminConfirm(id)
