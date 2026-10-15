@@ -5,15 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge } from '@/components/ui/badge'
 import { PageSpinner } from '@/components/shared/Spinner'
 import { formatCurrency } from '@/lib/utils'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Hotel, BookOpen, DollarSign, TrendingUp } from 'lucide-react'
 import type { BookingStatus } from '@/types'
-
-const REVENUE_DATA = [
-  { month: 'Jan', revenue: 42 }, { month: 'Feb', revenue: 38 }, { month: 'Mar', revenue: 55 },
-  { month: 'Apr', revenue: 61 }, { month: 'May', revenue: 72 }, { month: 'Jun', revenue: 68 },
-  { month: 'Jul', revenue: 89 }, { month: 'Aug', revenue: 95 },
-]
 
 export function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -74,7 +67,8 @@ export function DashboardPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Avg. Revenue/Day</p>
                 <p className="text-2xl font-bold mt-1">
-                  {formatCurrency(Number(stats.revenueThisMonth) / 30)}
+                  {/* Average over the days of this month so far. */}
+                  {formatCurrency(Number(stats.revenueThisMonth) / new Date().getDate())}
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-blue-500 opacity-80" />
@@ -82,30 +76,6 @@ export function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Monthly Revenue</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={REVENUE_DATA}>
-              <defs>
-                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1B3A5C" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#1B3A5C" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(27,58,92,0.08)" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(v) => [`$${v}k`, 'Revenue']} />
-              <Area type="monotone" dataKey="revenue" stroke="#1B3A5C" fill="url(#colorRevenue)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
 
       {/* Recent Bookings */}
       <Card>

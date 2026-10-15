@@ -76,7 +76,7 @@ export function ConfirmationPage() {
       </div>
 
       <p className="text-sm text-muted-foreground mb-6">
-        A confirmation has been sent to <strong>{booking.guestEmail}</strong>
+        Keep your booking code — you can find this booking any time under My Bookings.
       </p>
 
       <div className="flex gap-3 justify-center">

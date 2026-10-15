@@ -15,7 +15,7 @@ A full-stack hotel booking web application built for portfolio purposes, coverin
 - React 19 + TypeScript + Vite
 - Tailwind CSS v4 + shadcn/ui (Radix UI)
 - React Router v7 + Axios
-- Recharts (admin charts) + Sonner (toast notifications)
+- Sonner (toast notifications)
 
 ## Features
 
@@ -28,7 +28,7 @@ A full-stack hotel booking web application built for portfolio purposes, coverin
 - Edit profile
 
 **Admin**
-- Dashboard with revenue stats and booking overview (Recharts)
+- Dashboard with this month's bookings, revenue and recent bookings
 - Manage hotels (create, edit, delete) with amenities and image URLs
 - Manage room types per hotel with pricing and availability
 - Manage all bookings (confirm, cancel)
