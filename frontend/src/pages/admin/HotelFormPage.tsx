@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageSpinner } from '@/components/shared/Spinner'
+import { getErrorMessage } from '@/lib/utils'
 
 const ALL_AMENITIES = ['Wifi', 'Pool', 'Gym', 'Restaurant', 'Spa', 'Parking', 'Beach', 'Bar', 'Room Service', 'Laundry']
 
@@ -50,7 +51,7 @@ export function HotelFormPage() {
         })
       })
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, isEdit])
 
   function update(field: keyof HotelRequest) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -89,8 +90,7 @@ export function HotelFormPage() {
       }
       navigate('/admin/hotels')
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(msg || 'Failed to save hotel')
+      setError(getErrorMessage(err, 'Failed to save hotel'))
     } finally {
       setSaving(false)
     }

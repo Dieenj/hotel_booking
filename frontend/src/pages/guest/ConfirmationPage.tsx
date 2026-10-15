@@ -20,7 +20,7 @@ export function ConfirmationPage() {
       .then(setBooking)
       .catch(() => navigate('/'))
       .finally(() => setLoading(false))
-  }, [bookingId])
+  }, [bookingId, navigate])
 
   if (loading) return <PageSpinner />
   if (!booking) return null
@@ -46,11 +46,11 @@ export function ConfirmationPage() {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Hotel</span>
-            <span className="font-medium">{booking.roomType.hotelName}</span>
+            <span className="font-medium">{booking.hotelName}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Room</span>
-            <span>{booking.roomType.name}</span>
+            <span>{booking.roomTypeName}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Check-in</span>

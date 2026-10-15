@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageSpinner } from '@/components/shared/Spinner'
-import { formatCurrency, calcNights } from '@/lib/utils'
+import { formatCurrency, calcNights, getErrorMessage } from '@/lib/utils'
 
 export function PaymentPage() {
   const { bookingId } = useParams<{ bookingId: string }>()
@@ -17,6 +17,7 @@ export function PaymentPage() {
   const [booking, setBooking] = useState<BookingResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   const [card, setCard] = useState({
     number: '',
@@ -32,7 +33,7 @@ export function PaymentPage() {
       .then(setBooking)
       .catch(() => navigate('/my-bookings'))
       .finally(() => setLoading(false))
-  }, [bookingId])
+  }, [bookingId, navigate])
 
   function updateCard(field: string) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -43,11 +44,12 @@ export function PaymentPage() {
     e.preventDefault()
     if (!bookingId) return
     setSubmitting(true)
+    setError('')
     try {
       await bookingsApi.confirmPayment(parseInt(bookingId))
       navigate(`/confirmation/${bookingId}`)
-    } catch {
-      navigate(`/confirmation/${bookingId}`)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Payment failed. Please try again.'))
     } finally {
       setSubmitting(false)
     }
@@ -120,6 +122,12 @@ export function PaymentPage() {
             </CardContent>
           </Card>
 
+          {error && (
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           <Button type="submit" size="lg" className="w-full" disabled={submitting}>
             {submitting ? 'Processing...' : `Pay Now — ${formatCurrency(booking.totalPrice)}`}
           </Button>
@@ -137,8 +145,8 @@ export function PaymentPage() {
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div>
-                <p className="font-medium">{booking.roomType.hotelName}</p>
-                <p className="text-muted-foreground">{booking.roomType.name}</p>
+                <p className="font-medium">{booking.hotelName}</p>
+                <p className="text-muted-foreground">{booking.roomTypeName}</p>
               </div>
               <div className="space-y-1.5">
                 <div className="flex justify-between">

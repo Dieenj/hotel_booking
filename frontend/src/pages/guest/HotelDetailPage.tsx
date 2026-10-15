@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router'
 import { MapPin, Wifi, Car, Dumbbell, UtensilsCrossed, Waves, ChevronLeft, ChevronRight } from 'lucide-react'
 import { hotelsApi } from '@/api/hotels'
 import { reviewsApi } from '@/api/reviews'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/useAuth'
 import type { HotelResponse, RoomTypeResponse, ReviewResponse } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -118,7 +118,7 @@ export function HotelDetailPage() {
           {hotel.averageRating && (
             <div className="flex items-center gap-2 mt-2">
               <StarRating rating={hotel.averageRating} size="md" showValue />
-              <span className="text-sm text-muted-foreground">({hotel.totalReviews} reviews)</span>
+              <span className="text-sm text-muted-foreground">({hotel.reviewCount} reviews)</span>
             </div>
           )}
         </div>
@@ -168,7 +168,7 @@ export function HotelDetailPage() {
                     <div>
                       <div className="flex items-start justify-between">
                         <h3 className="font-semibold text-lg">{room.name}</h3>
-                        {room.availableRooms !== undefined && room.availableRooms <= 3 && (
+                        {room.availableRooms != null && room.availableRooms > 0 && room.availableRooms <= 3 && (
                           <span className="text-xs text-destructive font-medium bg-destructive/10 px-2 py-1 rounded-full">
                             Only {room.availableRooms} left!
                           </span>
@@ -177,7 +177,7 @@ export function HotelDetailPage() {
                       <p className="text-sm text-muted-foreground mt-1">{room.description}</p>
                       <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
                         <span>👥 Up to {room.maxCapacity} guests</span>
-                        <span>📐 {room.areaM2} m²</span>
+                        {room.area != null && <span>📐 {room.area} m²</span>}
                       </div>
                       <div className="flex flex-wrap gap-1 mt-3">
                         {room.amenities.map((a) => (
@@ -188,7 +188,7 @@ export function HotelDetailPage() {
                     <div className="flex items-center justify-between mt-4">
                       <div>
                         <span className="text-2xl font-bold text-primary">
-                          {formatCurrency(room.basePricePerNight)}
+                          {formatCurrency(room.basePrice)}
                         </span>
                         <span className="text-sm text-muted-foreground">/night</span>
                       </div>
@@ -215,7 +215,7 @@ export function HotelDetailPage() {
                 <div key={review.id} className="bg-card border border-border rounded-xl p-4">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-medium">{review.userFullName}</p>
+                      <p className="font-medium">{review.userName}</p>
                       <p className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</p>
                     </div>
                     <StarRating rating={review.rating} size="sm" showValue />

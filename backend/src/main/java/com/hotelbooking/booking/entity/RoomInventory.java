@@ -23,6 +23,7 @@ public class RoomInventory extends BaseEntity {
     @Column(nullable = false)
     private LocalDate date;
 
+    @Setter
     @Column(nullable = false)
     private Integer totalRooms;
 

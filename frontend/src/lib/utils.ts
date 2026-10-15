@@ -25,3 +25,9 @@ export function calcNights(checkIn: string, checkOut: string): number {
   const ms = new Date(checkOut).getTime() - new Date(checkIn).getTime()
   return Math.ceil(ms / (1000 * 60 * 60 * 24))
 }
+
+/** Extracts the backend's error text from an Axios error, falling back to the given message. */
+export function getErrorMessage(err: unknown, fallback: string): string {
+  const data = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data
+  return data?.error || data?.message || fallback
+}

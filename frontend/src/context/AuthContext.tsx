@@ -1,28 +1,16 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { UserProfile } from '@/types'
 import { authApi } from '@/api/auth'
-
-interface AuthContextValue {
-  user: UserProfile | null
-  token: string | null
-  isLoading: boolean
-  login: (token: string, user: UserProfile) => void
-  logout: () => void
-  refreshUser: () => Promise<void>
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null)
+import { AuthContext } from './useAuth'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'))
-  const [isLoading, setIsLoading] = useState(!!localStorage.getItem('token'))
+  // Only a stored token needs resolving into a user; without one there is nothing to wait for.
+  const [isLoading, setIsLoading] = useState(() => !!localStorage.getItem('token'))
 
   useEffect(() => {
-    if (!token) {
-      setIsLoading(false)
-      return
-    }
+    if (!token || user) return
     authApi
       .getMe()
       .then(setUser)
@@ -31,12 +19,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(null)
       })
       .finally(() => setIsLoading(false))
-  }, [token])
+  }, [token, user])
 
   function login(newToken: string, newUser: UserProfile) {
     localStorage.setItem('token', newToken)
     setToken(newToken)
     setUser(newUser)
+    setIsLoading(false)
   }
 
   function logout() {
@@ -55,10 +44,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
 }

@@ -8,7 +8,7 @@ export const bookingsApi = {
   },
 
   confirmPayment: async (id: number): Promise<BookingResponse> => {
-    const res = await client.post<ApiResponse<BookingResponse>>(`/bookings/${id}/confirm-payment`)
+    const res = await client.post<ApiResponse<BookingResponse>>(`/bookings/${id}/pay`)
     return res.data.data
   },
 
@@ -22,7 +22,7 @@ export const bookingsApi = {
     page?: number
     size?: number
   }): Promise<PageResponse<BookingResponse>> => {
-    const res = await client.get<ApiResponse<PageResponse<BookingResponse>>>('/bookings/my', {
+    const res = await client.get<ApiResponse<PageResponse<BookingResponse>>>('/bookings', {
       params,
     })
     return res.data.data
@@ -40,7 +40,7 @@ export const bookingsApi = {
     page?: number
     size?: number
   }): Promise<PageResponse<BookingResponse>> => {
-    const res = await client.get<ApiResponse<PageResponse<BookingResponse>>>('/bookings', {
+    const res = await client.get<ApiResponse<PageResponse<BookingResponse>>>('/admin/bookings', {
       params,
     })
     return res.data.data

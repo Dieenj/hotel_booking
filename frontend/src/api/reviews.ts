@@ -7,7 +7,7 @@ export const reviewsApi = {
     params?: { page?: number; size?: number }
   ): Promise<PageResponse<ReviewResponse>> => {
     const res = await client.get<ApiResponse<PageResponse<ReviewResponse>>>(
-      `/reviews/hotel/${hotelId}`,
+      `/hotels/${hotelId}/reviews`,
       { params }
     )
     return res.data.data

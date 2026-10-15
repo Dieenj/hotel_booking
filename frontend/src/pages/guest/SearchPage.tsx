@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { MapPin, Star, Search, SlidersHorizontal } from 'lucide-react'
 import { hotelsApi } from '@/api/hotels'
@@ -22,33 +22,33 @@ export function SearchPage() {
   const [cityInput, setCityInput] = useState(searchParams.get('city') || '')
   const [nameInput, setNameInput] = useState(searchParams.get('name') || '')
   const [minRating, setMinRating] = useState<number | undefined>(undefined)
-  const [sort, setSort] = useState('price,asc')
+  const [sort, setSort] = useState('newest')
 
   const SIZE = 9
 
+  const fetchHotels = useCallback(
+    () =>
+      hotelsApi
+        .search({
+          city: searchParams.get('city') || undefined,
+          name: searchParams.get('name') || undefined,
+          minRating,
+          page,
+          size: SIZE,
+          sort,
+        })
+        .then((res) => {
+          setHotels(res.content)
+          setTotalElements(res.totalElements)
+        })
+        .catch(() => setHotels([]))
+        .finally(() => setLoading(false)),
+    [page, sort, minRating, searchParams]
+  )
+
   useEffect(() => {
     fetchHotels()
-  }, [page, sort, minRating, searchParams])
-
-  async function fetchHotels() {
-    setLoading(true)
-    try {
-      const res = await hotelsApi.search({
-        city: searchParams.get('city') || undefined,
-        name: searchParams.get('name') || undefined,
-        minRating,
-        page,
-        size: SIZE,
-        sort,
-      })
-      setHotels(res.content)
-      setTotalElements(res.totalElements)
-    } catch {
-      setHotels([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [fetchHotels])
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -131,9 +131,9 @@ export function SearchPage() {
                 value={sort}
                 onChange={(e) => { setSort(e.target.value); setPage(0) }}
               >
-                <option value="price,asc">Price: Low to High</option>
-                <option value="price,desc">Price: High to Low</option>
-                <option value="starRating,desc">Star Rating</option>
+                <option value="newest">Newest</option>
+                <option value="rating_desc">Star Rating</option>
+                <option value="name_asc">Name (A–Z)</option>
               </select>
             </div>
           </div>
@@ -184,8 +184,8 @@ export function SearchPage() {
                           <span className="text-sm font-medium">
                             {hotel.averageRating?.toFixed(1) || hotel.starRating}
                           </span>
-                          {hotel.totalReviews !== undefined && (
-                            <span className="text-xs text-muted-foreground">({hotel.totalReviews})</span>
+                          {hotel.reviewCount != null && (
+                            <span className="text-xs text-muted-foreground">({hotel.reviewCount})</span>
                           )}
                         </div>
                       </div>
@@ -199,12 +199,15 @@ export function SearchPage() {
                           </span>
                         ))}
                       </div>
-                      <div className="text-right shrink-0 ml-4">
-                        <span className="text-xl font-bold text-primary">
-                          {formatCurrency(189)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">/night</span>
-                      </div>
+                      {hotel.minPrice != null && (
+                        <div className="text-right shrink-0 ml-4">
+                          <span className="text-xs text-muted-foreground">from </span>
+                          <span className="text-xl font-bold text-primary">
+                            {formatCurrency(hotel.minPrice)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">/night</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

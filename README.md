@@ -112,16 +112,55 @@ Frontend runs at `http://localhost:5173`, proxies `/api` → `http://localhost:8
 
 ## API Overview
 
+Full, always-current reference: Swagger UI at `/swagger-ui.html`.
+
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | POST | `/api/auth/register` | Public | Register new account |
 | POST | `/api/auth/login` | Public | Login, returns JWT |
-| GET | `/api/hotels` | Public | List hotels with filters |
-| GET | `/api/hotels/{id}` | Public | Hotel detail + room types |
-| POST | `/api/bookings` | User | Create booking |
-| GET | `/api/bookings/my` | User | My bookings |
-| POST | `/api/reviews` | User | Submit review |
-| GET | `/api/admin/dashboard` | Admin | Revenue stats |
-| POST | `/api/admin/hotels` | Admin | Create hotel |
-| PUT | `/api/admin/hotels/{id}` | Admin | Update hotel |
-| DELETE | `/api/admin/hotels/{id}` | Admin | Delete hotel |
+| GET | `/api/auth/me` | User | Current user profile |
+| PUT | `/api/auth/profile` | User | Update profile |
+| GET | `/api/hotels` | Public | Search hotels (`city`, `name`, `minRating`, `sort` = `newest` \| `rating_desc` \| `name_asc`) |
+| GET | `/api/hotels/{id}` | Public | Hotel detail |
+| GET | `/api/hotels/{id}/room-types` | Public | Room types, with availability when `checkIn`/`checkOut` given |
+| GET | `/api/hotels/{id}/reviews` | Public | Hotel reviews |
+| GET | `/api/availability` | Public | Rooms available for a room type and date range (max 30 nights) |
+| POST | `/api/bookings` | User | Create booking (status `PENDING`) |
+| GET | `/api/bookings` | User | My bookings |
+| GET | `/api/bookings/{id}` | User | Booking detail |
+| POST | `/api/bookings/{id}/pay` | User | Mock payment → `CONFIRMED` |
+| POST | `/api/bookings/{id}/cancel` | User | Cancel booking |
+| POST | `/api/reviews` | User | Review a `COMPLETED` booking |
+| GET | `/api/reviews/my` | User | My reviews |
+| GET | `/api/admin/stats` | Admin | Dashboard stats |
+| GET | `/api/admin/bookings` | Admin | All bookings |
+| POST | `/api/admin/bookings/{id}/confirm` \| `cancel` | Admin | Confirm / cancel booking |
+| POST/PUT/DELETE | `/api/admin/hotels[/{id}]` | Admin | Manage hotels |
+| POST | `/api/admin/hotels/{id}/room-types` | Admin | Create room type |
+| PUT/DELETE | `/api/admin/room-types/{id}` | Admin | Update / delete room type |
+
+Errors use the same envelope: `{ "success": false, "error": "..." }` with 400/401/403/404/409.
+
+## Booking Lifecycle
+
+`PENDING` → (`/pay`) → `CONFIRMED` → (check-out date reached) → `COMPLETED` → can be reviewed.
+
+Scheduled jobs (disable with `app.scheduling.enabled=false`):
+- Unpaid `PENDING` bookings are cancelled after `app.booking.pending-ttl` (default `30m`, env `BOOKING_PENDING_TTL`) and their rooms released.
+- `CONFIRMED`/`CHECKED_IN` bookings whose check-out date has arrived become `COMPLETED` (hourly).
+
+## Development
+
+```bash
+cd backend && mvn verify          # unit + integration tests (H2, no database needed)
+cd frontend && pnpm lint && pnpm build
+```
+
+CI (`.github/workflows/ci.yml`) runs the same checks on every push and pull request.
+
+### Docker
+
+```bash
+cp .env.example .env              # then set JWT_SECRET (>= 32 chars)
+docker compose up --build
+```
