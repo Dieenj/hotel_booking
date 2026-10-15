@@ -6,8 +6,8 @@ import type { HotelResponse } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageSpinner } from '@/components/shared/Spinner'
-import { formatCurrency } from '@/lib/utils'
-import { readStay, stayQuery, writeStay } from '@/lib/stay'
+import { formatCurrency, formatDate } from '@/lib/utils'
+import { readStay, stayError, stayQuery, writeStay } from '@/lib/stay'
 import { StayPicker } from '@/components/shared/StayPicker'
 
 const STAR_OPTIONS = [5, 4, 3, 2, 1]
@@ -29,6 +29,10 @@ export function SearchPage() {
 
   const SIZE = 9
 
+  // Only filter by availability once the URL has a usable stay; partial input is ignored.
+  const stay = readStay(searchParams)
+  const stayActive = stayError(stay) === null
+
   const fetchHotels = useCallback(
     () =>
       hotelsApi
@@ -36,6 +40,8 @@ export function SearchPage() {
           city: searchParams.get('city') || undefined,
           name: searchParams.get('name') || undefined,
           minRating,
+          ...(stayActive ? { checkIn: stay.checkIn, checkOut: stay.checkOut } : {}),
+          guests: Number(stay.guests) > 0 ? Number(stay.guests) : undefined,
           page,
           size: SIZE,
           sort,
@@ -46,7 +52,7 @@ export function SearchPage() {
         })
         .catch(() => setHotels([]))
         .finally(() => setLoading(false)),
-    [page, sort, minRating, searchParams]
+    [page, sort, minRating, searchParams, stayActive, stay.checkIn, stay.checkOut, stay.guests]
   )
 
   useEffect(() => {
@@ -148,6 +154,7 @@ export function SearchPage() {
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">
               {totalElements} hotel{totalElements !== 1 ? 's' : ''} found
+              {stayActive && ` with rooms available ${formatDate(stay.checkIn)} – ${formatDate(stay.checkOut)}`}
             </p>
           </div>
 

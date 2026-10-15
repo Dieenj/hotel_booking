@@ -125,7 +125,7 @@ Full, always-current reference: Swagger UI at `/swagger-ui.html`.
 | POST | `/api/auth/login` | Public | Login, returns JWT |
 | GET | `/api/auth/me` | User | Current user profile |
 | PUT | `/api/auth/profile` | User | Update profile |
-| GET | `/api/hotels` | Public | Search hotels (`city`, `name`, `minRating`, `sort` = `newest` \| `rating_desc` \| `name_asc`) |
+| GET | `/api/hotels` | Public | Search hotels (`city`, `name`, `minRating`, `checkIn` + `checkOut` = only hotels with a room free for the whole stay, `guests`, `sort` = `newest` \| `rating_desc` \| `name_asc`) |
 | GET | `/api/hotels/{id}` | Public | Hotel detail |
 | GET | `/api/hotels/{id}/room-types` | Public | Room types, with availability when `checkIn`/`checkOut` given |
 | GET | `/api/hotels/{id}/reviews` | Public | Hotel reviews |

@@ -1,10 +1,13 @@
 package com.hotelbooking.hotel.service;
 
+import com.hotelbooking.booking.service.StayPolicy;
+import com.hotelbooking.common.exception.BusinessException;
 import com.hotelbooking.common.exception.ResourceNotFoundException;
 import com.hotelbooking.common.response.PageResponse;
 import com.hotelbooking.common.response.Pagination;
 import com.hotelbooking.hotel.dto.HotelRequest;
 import com.hotelbooking.hotel.dto.HotelResponse;
+import com.hotelbooking.hotel.dto.HotelSearchCriteria;
 import com.hotelbooking.hotel.entity.Hotel;
 import com.hotelbooking.hotel.repository.HotelMinPrice;
 import com.hotelbooking.hotel.repository.HotelRepository;
@@ -16,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,8 +40,9 @@ public class HotelServiceImpl implements HotelService {
     private final RoomTypeRepository roomTypeRepository;
 
     @Override
-    public PageResponse<HotelResponse> searchHotels(String city, Integer minRating, String name,
-                                                     int page, int size, String sort) {
+    public PageResponse<HotelResponse> searchHotels(HotelSearchCriteria criteria, int page, int size, String sort) {
+        validate(criteria);
+
         Sort sortObj = switch (sort) {
             case "rating_desc" -> Sort.by("starRating").descending();
             case "name_asc"    -> Sort.by("name").ascending();
@@ -45,8 +50,13 @@ public class HotelServiceImpl implements HotelService {
         };
 
         Pageable pageable = Pagination.of(page, size, sortObj);
-        Page<Hotel> hotels = hotelRepository.findAll(
-                HotelSpecifications.search(trimToNull(city), trimToNull(name), minRating), pageable);
+        Specification<Hotel> spec = HotelSpecifications.search(
+                trimToNull(criteria.city()), trimToNull(criteria.name()), criteria.minRating());
+        if (criteria.hasDates() || criteria.guests() != null) {
+            spec = spec.and(HotelSpecifications.hasAvailableRoom(
+                    criteria.checkIn(), criteria.checkOut(), criteria.guests()));
+        }
+        Page<Hotel> hotels = hotelRepository.findAll(spec, pageable);
 
         // Aggregate queries for the whole page instead of queries per hotel.
         List<Long> hotelIds = hotels.map(Hotel::getId).getContent();
@@ -126,6 +136,18 @@ public class HotelServiceImpl implements HotelService {
         return hotelRepository.findById(id)
                 .filter(Hotel::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel", id));
+    }
+
+    private static void validate(HotelSearchCriteria criteria) {
+        if ((criteria.checkIn() == null) != (criteria.checkOut() == null)) {
+            throw new BusinessException("Provide both checkIn and checkOut, or neither");
+        }
+        if (criteria.hasDates()) {
+            StayPolicy.validateRange(criteria.checkIn(), criteria.checkOut());
+        }
+        if (criteria.guests() != null && criteria.guests() < 1) {
+            throw new BusinessException("Guests must be at least 1");
+        }
     }
 
     private static String trimToNull(String value) {

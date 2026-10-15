@@ -6,6 +6,10 @@ export const hotelsApi = {
     city?: string
     name?: string
     minRating?: number
+    /** With checkOut: only hotels with a room free for the whole stay. */
+    checkIn?: string
+    checkOut?: string
+    guests?: number
     page?: number
     size?: number
     sort?: string
