@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageSpinner } from '@/components/shared/Spinner'
 import { getErrorMessage } from '@/lib/utils'
+import { RoomTypeManager } from './RoomTypeManager'
 
 const ALL_AMENITIES = ['Wifi', 'Pool', 'Gym', 'Restaurant', 'Spa', 'Parking', 'Beach', 'Bar', 'Room Service', 'Laundry']
 
@@ -85,10 +86,12 @@ export function HotelFormPage() {
       const payload = { ...form, starRating: parseInt(String(form.starRating)) }
       if (isEdit) {
         await hotelsApi.update(parseInt(id!), payload)
+        navigate('/admin/hotels')
       } else {
-        await hotelsApi.create(payload)
+        // Continue on the edit page so room types can be added right away.
+        const created = await hotelsApi.create(payload)
+        navigate(`/admin/hotels/${created.id}/edit`, { replace: true })
       }
-      navigate('/admin/hotels')
     } catch (err: unknown) {
       setError(getErrorMessage(err, 'Failed to save hotel'))
     } finally {
@@ -215,6 +218,8 @@ export function HotelFormPage() {
           </Button>
         </div>
       </form>
+
+      {isEdit && <RoomTypeManager hotelId={parseInt(id!)} />}
     </div>
   )
 }
