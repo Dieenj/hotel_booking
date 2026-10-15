@@ -17,14 +17,21 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    @Value("${app.jwt.secret}")
-    private String secret;
+    /** HS256 requires a key of at least 256 bits. */
+    private static final int MIN_SECRET_BYTES = 32;
 
-    @Value("${app.jwt.expiration}")
-    private long expiration;
+    private final SecretKey signingKey;
+    private final long expiration;
 
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    public JwtUtil(@Value("${app.jwt.secret}") String secret,
+                   @Value("${app.jwt.expiration}") long expiration) {
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "app.jwt.secret must be at least " + MIN_SECRET_BYTES + " bytes long");
+        }
+        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+        this.expiration = expiration;
     }
 
     public String generateToken(UserDetails userDetails) {
@@ -42,7 +49,7 @@ public class JwtUtil {
                 .subject(subject)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey())
+                .signWith(signingKey)
                 .compact();
     }
 
@@ -56,7 +63,7 @@ public class JwtUtil {
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .verifyWith(getSigningKey())
+                .verifyWith(signingKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

@@ -2,6 +2,7 @@ package com.hotelbooking.hotel.service;
 
 import com.hotelbooking.common.exception.ResourceNotFoundException;
 import com.hotelbooking.common.response.PageResponse;
+import com.hotelbooking.common.response.Pagination;
 import com.hotelbooking.hotel.dto.HotelRequest;
 import com.hotelbooking.hotel.dto.HotelResponse;
 import com.hotelbooking.hotel.entity.Hotel;
@@ -9,7 +10,6 @@ import com.hotelbooking.hotel.repository.HotelRepository;
 import com.hotelbooking.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ public class HotelServiceImpl implements HotelService {
             default            -> Sort.by("createdAt").descending();
         };
 
-        Pageable pageable = PageRequest.of(page, size, sortObj);
+        Pageable pageable = Pagination.of(page, size, sortObj);
         Page<Hotel> hotels = hotelRepository.searchHotels(city, minRating, name, pageable);
 
         Page<HotelResponse> responses = hotels.map(hotel -> {

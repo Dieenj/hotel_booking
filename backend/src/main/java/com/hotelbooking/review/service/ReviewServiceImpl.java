@@ -8,6 +8,7 @@ import com.hotelbooking.booking.repository.BookingRepository;
 import com.hotelbooking.common.exception.BusinessException;
 import com.hotelbooking.common.exception.ResourceNotFoundException;
 import com.hotelbooking.common.response.PageResponse;
+import com.hotelbooking.common.response.Pagination;
 import com.hotelbooking.hotel.entity.Hotel;
 import com.hotelbooking.hotel.service.HotelService;
 import com.hotelbooking.review.dto.ReviewRequest;
@@ -15,7 +16,6 @@ import com.hotelbooking.review.dto.ReviewResponse;
 import com.hotelbooking.review.entity.Review;
 import com.hotelbooking.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,15 +33,15 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public PageResponse<ReviewResponse> getHotelReviews(Long hotelId, int page, int size) {
         hotelService.findActiveHotelById(hotelId);
-        var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        var pageable = Pagination.of(page, size, Sort.by("createdAt").descending());
         return PageResponse.from(
                 reviewRepository.findByHotelId(hotelId, pageable).map(ReviewResponse::from));
     }
 
     @Override
     public PageResponse<ReviewResponse> getMyReviews(String email, int page, int size) {
-        User user = userRepository.findByEmail(email).orElseThrow();
-        var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        User user = userRepository.getByEmailOrThrow(email);
+        var pageable = Pagination.of(page, size, Sort.by("createdAt").descending());
         return PageResponse.from(
                 reviewRepository.findByUserId(user.getId(), pageable).map(ReviewResponse::from));
     }
@@ -49,7 +49,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     @Override
     public ReviewResponse createReview(String userEmail, ReviewRequest request) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
+        User user = userRepository.getByEmailOrThrow(userEmail);
 
         Booking booking = bookingRepository.findById(request.getBookingId())
                 .orElseThrow(() -> new ResourceNotFoundException("Booking", request.getBookingId()));

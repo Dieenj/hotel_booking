@@ -11,10 +11,10 @@ import com.hotelbooking.booking.repository.BookingRepository;
 import com.hotelbooking.common.exception.BusinessException;
 import com.hotelbooking.common.exception.ResourceNotFoundException;
 import com.hotelbooking.common.response.PageResponse;
+import com.hotelbooking.common.response.Pagination;
 import com.hotelbooking.hotel.entity.RoomType;
 import com.hotelbooking.hotel.service.RoomTypeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -61,7 +61,7 @@ public class BookingServiceImpl implements BookingService {
 
         availabilityService.reserve(roomType, request.getCheckIn(), request.getCheckOut());
 
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
+        User user = userRepository.getByEmailOrThrow(userEmail);
 
         BigDecimal totalPrice = calculateTotalPrice(
                 roomType.getBasePrice(), request.getCheckIn(), request.getCheckOut());
@@ -98,8 +98,8 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public PageResponse<BookingResponse> getMyBookings(String userEmail, BookingStatus status,
                                                         int page, int size) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
-        var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        User user = userRepository.getByEmailOrThrow(userEmail);
+        var pageable = Pagination.of(page, size, Sort.by("createdAt").descending());
 
         var bookings = status != null
                 ? bookingRepository.findByUserIdAndStatus(user.getId(), status, pageable)
@@ -113,7 +113,7 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking", id));
 
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
+        User user = userRepository.getByEmailOrThrow(userEmail);
         boolean isOwner = booking.getUser().getId().equals(user.getId());
         boolean isAdmin = user.getRole() == Role.ADMIN;
 
@@ -127,7 +127,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public PageResponse<BookingResponse> getAllBookings(BookingStatus status, Long hotelId,
                                                         int page, int size) {
-        var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        var pageable = Pagination.of(page, size, Sort.by("createdAt").descending());
         return PageResponse.from(
                 bookingRepository.findAllByFilters(status, hotelId, pageable)
                         .map(BookingResponse::from));
@@ -191,7 +191,7 @@ public class BookingServiceImpl implements BookingService {
     private Booking findBookingForUser(Long bookingId, String userEmail) {
         Booking booking = findBookingForUpdate(bookingId);
 
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
+        User user = userRepository.getByEmailOrThrow(userEmail);
         if (!booking.getUser().getId().equals(user.getId())) {
             throw new BusinessException("Access denied", HttpStatus.FORBIDDEN);
         }

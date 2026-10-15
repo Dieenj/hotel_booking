@@ -52,20 +52,20 @@ public class AuthServiceImpl implements AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        User user = userRepository.getByEmailOrThrow(request.getEmail());
         return buildAuthResponse(user, generateToken(user));
     }
 
     @Override
     public AuthResponse getMe(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow();
+        User user = userRepository.getByEmailOrThrow(email);
         return buildAuthResponse(user, null);
     }
 
     @Transactional
     @Override
     public AuthResponse updateProfile(String email, String fullName, String phone) {
-        User user = userRepository.findByEmail(email).orElseThrow();
+        User user = userRepository.getByEmailOrThrow(email);
         user.setFullName(fullName);
         user.setPhone(phone);
         userRepository.save(user);

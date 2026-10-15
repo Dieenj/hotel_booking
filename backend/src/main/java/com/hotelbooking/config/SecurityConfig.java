@@ -1,5 +1,6 @@
 package com.hotelbooking.config;
 
+import com.hotelbooking.common.security.JsonSecurityErrorHandler;
 import com.hotelbooking.common.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
+    private final JsonSecurityErrorHandler securityErrorHandler;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
@@ -46,17 +48,21 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/hotels/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/room-types/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
-                        .requestMatchers("/api/availability/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/availability").permitAll()
                         // Swagger
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
                         // Admin only
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Authenticated
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(securityErrorHandler)
+                        .accessDeniedHandler(securityErrorHandler)
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
