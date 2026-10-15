@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, useSearchParams } from 'react-router'
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router'
 import { MapPin, Wifi, Car, Dumbbell, UtensilsCrossed, Waves, ChevronLeft, ChevronRight } from 'lucide-react'
 import { hotelsApi } from '@/api/hotels'
 import { reviewsApi } from '@/api/reviews'
@@ -10,6 +10,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { StarRating } from '@/components/shared/StarRating'
 import { PageSpinner } from '@/components/shared/Spinner'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { readStay, stayError, writeStay, type Stay } from '@/lib/stay'
+import { StayPicker } from '@/components/shared/StayPicker'
 
 const AMENITY_ICONS: Record<string, React.ReactNode> = {
   Wifi: <Wifi className="h-4 w-4" />,
@@ -21,8 +23,9 @@ const AMENITY_ICONS: Record<string, React.ReactNode> = {
 
 export function HotelDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
 
   const [hotel, setHotel] = useState<HotelResponse | null>(null)
@@ -31,18 +34,19 @@ export function HotelDetailPage() {
   const [loading, setLoading] = useState(true)
   const [galleryIndex, setGalleryIndex] = useState(0)
 
-  const checkIn = searchParams.get('checkIn') || ''
-  const checkOut = searchParams.get('checkOut') || ''
+  const stay = readStay(searchParams)
+  const { checkIn, checkOut } = stay
+  const datesValid = stayError(stay) === null
+  const [stayInput, setStayInput] = useState<Stay>(stay)
+  const [stayInputError, setStayInputError] = useState('')
 
   useEffect(() => {
     if (!id) return
     const hotelId = parseInt(id)
     Promise.all([
       hotelsApi.getById(hotelId),
-      hotelsApi.getRoomTypes(hotelId, {
-        checkIn: checkIn || undefined,
-        checkOut: checkOut || undefined,
-      }),
+      // Only ask for availability with a valid range; otherwise the API rejects the whole call.
+      hotelsApi.getRoomTypes(hotelId, datesValid ? { checkIn, checkOut } : {}),
       reviewsApi.getByHotel(hotelId, { page: 0, size: 5 }),
     ])
       .then(([h, rt, rv]) => {
@@ -51,17 +55,22 @@ export function HotelDetailPage() {
         setReviews(rv.content)
       })
       .finally(() => setLoading(false))
-  }, [id, checkIn, checkOut])
+  }, [id, checkIn, checkOut, datesValid])
+
+  function handleCheckAvailability(e: React.FormEvent) {
+    e.preventDefault()
+    const error = stayError(stayInput)
+    setStayInputError(error ?? '')
+    if (!error) setSearchParams(writeStay(new URLSearchParams(searchParams), stayInput), { replace: true })
+  }
 
   function handleBookNow(roomType: RoomTypeResponse) {
     if (!user) {
-      navigate('/login', { state: { from: { pathname: `/hotels/${id}` } } })
+      navigate('/login', { state: { from: { pathname: location.pathname, search: location.search } } })
       return
     }
-    const params = new URLSearchParams()
+    const params = writeStay(new URLSearchParams(), stay)
     params.set('roomTypeId', String(roomType.id))
-    if (checkIn) params.set('checkIn', checkIn)
-    if (checkOut) params.set('checkOut', checkOut)
     navigate(`/booking?${params.toString()}`)
   }
 
@@ -130,7 +139,7 @@ export function HotelDetailPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="overview">
+      <Tabs defaultValue={datesValid ? "rooms" : "overview"}>
         <TabsList className="mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="rooms">Rooms</TabsTrigger>
@@ -151,6 +160,11 @@ export function HotelDetailPage() {
         </TabsContent>
 
         <TabsContent value="rooms">
+          <form onSubmit={handleCheckAvailability} className="flex flex-wrap items-end gap-3 mb-4 bg-card border border-border rounded-xl p-4">
+            <StayPicker value={stayInput} onChange={setStayInput} />
+            <Button type="submit" variant="outline">Check availability</Button>
+            {stayInputError && <p className="w-full text-sm text-destructive">{stayInputError}</p>}
+          </form>
           {roomTypes.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No room types available</p>
           ) : (

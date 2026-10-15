@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { Search, MapPin, Calendar, Users, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { todayIso } from '@/lib/stay'
 
 const FEATURED_HOTELS = [
   {
@@ -130,7 +131,7 @@ export function HomePage() {
                 type="date"
                 value={checkIn}
                 onChange={(e) => setCheckIn(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
+                min={todayIso()}
               />
             </div>
             <div className="flex-1 text-left">
@@ -141,7 +142,7 @@ export function HomePage() {
                 type="date"
                 value={checkOut}
                 onChange={(e) => setCheckOut(e.target.value)}
-                min={checkIn || new Date().toISOString().split('T')[0]}
+                min={checkIn || todayIso()}
               />
             </div>
             <div className="w-28 text-left">

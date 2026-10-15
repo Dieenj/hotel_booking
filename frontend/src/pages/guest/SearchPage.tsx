@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageSpinner } from '@/components/shared/Spinner'
 import { formatCurrency } from '@/lib/utils'
+import { readStay, stayQuery, writeStay } from '@/lib/stay'
+import { StayPicker } from '@/components/shared/StayPicker'
 
 const STAR_OPTIONS = [5, 4, 3, 2, 1]
 
@@ -21,6 +23,7 @@ export function SearchPage() {
 
   const [cityInput, setCityInput] = useState(searchParams.get('city') || '')
   const [nameInput, setNameInput] = useState(searchParams.get('name') || '')
+  const [stayInput, setStayInput] = useState(() => readStay(searchParams))
   const [minRating, setMinRating] = useState<number | undefined>(undefined)
   const [sort, setSort] = useState('newest')
 
@@ -55,15 +58,15 @@ export function SearchPage() {
     const params = new URLSearchParams()
     if (cityInput) params.set('city', cityInput)
     if (nameInput) params.set('name', nameInput)
-    setSearchParams(params)
+    setSearchParams(writeStay(params, stayInput))
     setPage(0)
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Search bar */}
-      <form onSubmit={handleSearch} className="flex gap-3 mb-8">
-        <div className="relative flex-1">
+      <form onSubmit={handleSearch} className="flex flex-wrap items-end gap-3 mb-8">
+        <div className="relative flex-1 min-w-40">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-9"
@@ -72,7 +75,7 @@ export function SearchPage() {
             onChange={(e) => setCityInput(e.target.value)}
           />
         </div>
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-40">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-9"
@@ -81,6 +84,7 @@ export function SearchPage() {
             onChange={(e) => setNameInput(e.target.value)}
           />
         </div>
+        <StayPicker value={stayInput} onChange={setStayInput} />
         <Button type="submit">Search</Button>
       </form>
 
@@ -160,7 +164,7 @@ export function SearchPage() {
               {hotels.map((hotel) => (
                 <div
                   key={hotel.id}
-                  onClick={() => navigate(`/hotels/${hotel.id}`)}
+                  onClick={() => navigate(`/hotels/${hotel.id}${stayQuery(readStay(searchParams))}`)}
                   className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer flex overflow-hidden"
                 >
                   <div className="w-60 shrink-0">

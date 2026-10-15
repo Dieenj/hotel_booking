@@ -17,7 +17,8 @@ export function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/'
+  const fromLocation = (location.state as { from?: { pathname: string; search?: string } })?.from
+  const from = fromLocation ? fromLocation.pathname + (fromLocation.search ?? '') : '/'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageSpinner } from '@/components/shared/Spinner'
 import { formatCurrency, calcNights, getErrorMessage } from '@/lib/utils'
+import { todayIso } from '@/lib/stay'
 
 export function BookingPage() {
   const [searchParams] = useSearchParams()
@@ -141,7 +142,7 @@ export function BookingPage() {
                     type="date"
                     value={form.checkIn}
                     onChange={update('checkIn')}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={todayIso()}
                     required
                   />
                 </div>
@@ -151,7 +152,7 @@ export function BookingPage() {
                     type="date"
                     value={form.checkOut}
                     onChange={update('checkOut')}
-                    min={form.checkIn || new Date().toISOString().split('T')[0]}
+                    min={form.checkIn || todayIso()}
                     required
                   />
                 </div>
