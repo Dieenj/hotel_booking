@@ -8,6 +8,7 @@ import com.hotelbooking.booking.service.BookingService;
 import com.hotelbooking.common.response.ApiResponse;
 import com.hotelbooking.common.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -64,13 +66,14 @@ public class BookingController {
     @GetMapping("/api/bookings")
     @Operation(summary = "Get my bookings")
     public ResponseEntity<ApiResponse<PageResponse<BookingResponse>>> getMyBookings(
-            @RequestParam(required = false) BookingStatus status,
+            @Parameter(description = "One or more statuses, e.g. status=PENDING,CONFIRMED")
+            @RequestParam(name = "status", required = false) List<BookingStatus> statuses,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         return ResponseEntity.ok(ApiResponse.ok(
-                bookingService.getMyBookings(userDetails.getUsername(), status, page, size)
+                bookingService.getMyBookings(userDetails.getUsername(), statuses, page, size)
         ));
     }
 

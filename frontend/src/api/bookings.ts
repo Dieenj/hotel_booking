@@ -17,13 +17,13 @@ export const bookingsApi = {
     return res.data.data
   },
 
-  getMyBookings: async (params: {
-    status?: BookingStatus
+  getMyBookings: async ({ statuses, ...params }: {
+    statuses?: BookingStatus[]
     page?: number
     size?: number
   }): Promise<PageResponse<BookingResponse>> => {
     const res = await client.get<ApiResponse<PageResponse<BookingResponse>>>('/bookings', {
-      params,
+      params: { ...params, status: statuses?.join(',') },
     })
     return res.data.data
   },

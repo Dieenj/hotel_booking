@@ -19,6 +19,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     boolean existsByBookingId(Long bookingId);
 
+    @Query("SELECT r.booking.id FROM Review r WHERE r.booking.id IN :bookingIds")
+    List<Long> findReviewedBookingIds(@Param("bookingIds") Collection<Long> bookingIds);
+
     Optional<Review> findByBookingId(Long bookingId);
 
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.hotel.id = :hotelId")

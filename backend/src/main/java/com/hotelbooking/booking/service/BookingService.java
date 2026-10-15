@@ -7,12 +7,13 @@ import com.hotelbooking.common.response.PageResponse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface BookingService {
     BookingResponse createBooking(String userEmail, BookingRequest request);
     BookingResponse confirmPayment(Long bookingId, String userEmail);
     BookingResponse cancelBooking(Long bookingId, String userEmail);
-    PageResponse<BookingResponse> getMyBookings(String userEmail, BookingStatus status, int page, int size);
+    PageResponse<BookingResponse> getMyBookings(String userEmail, List<BookingStatus> statuses, int page, int size);
     BookingResponse getBookingById(Long id, String userEmail);
     PageResponse<BookingResponse> getAllBookings(BookingStatus status, Long hotelId, int page, int size);
     BookingResponse adminConfirm(Long bookingId);

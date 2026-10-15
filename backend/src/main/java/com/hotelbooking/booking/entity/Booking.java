@@ -57,4 +57,13 @@ public class Booking extends AuditableEntity {
     private String guestEmail;
 
     private String guestPhone;
+
+    /**
+     * Guests may cancel an unfinished booking only before the check-in day; from then on the room
+     * is considered used and only an admin can cancel.
+     */
+    public boolean isCancellableByGuest(LocalDate today) {
+        return (status == BookingStatus.PENDING || status == BookingStatus.CONFIRMED)
+                && today.isBefore(checkIn);
+    }
 }

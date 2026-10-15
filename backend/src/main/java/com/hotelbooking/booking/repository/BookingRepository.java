@@ -26,7 +26,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Page<Booking> findByUserId(Long userId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"roomType", "roomType.hotel"})
-    Page<Booking> findByUserIdAndStatus(Long userId, BookingStatus status, Pageable pageable);
+    Page<Booking> findByUserIdAndStatusIn(Long userId, Collection<BookingStatus> statuses, Pageable pageable);
 
     Optional<Booking> findByBookingCode(String bookingCode);
 

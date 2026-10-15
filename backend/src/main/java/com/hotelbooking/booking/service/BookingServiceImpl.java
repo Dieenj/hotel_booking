@@ -14,7 +14,9 @@ import com.hotelbooking.common.response.PageResponse;
 import com.hotelbooking.common.response.Pagination;
 import com.hotelbooking.hotel.entity.RoomType;
 import com.hotelbooking.hotel.service.RoomTypeService;
+import com.hotelbooking.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,7 +28,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +51,7 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final RoomTypeService roomTypeService;
     private final AvailabilityService availabilityService;
+    private final ReviewRepository reviewRepository;
 
     @Transactional
     @Override
@@ -93,20 +98,27 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     @Override
     public BookingResponse cancelBooking(Long bookingId, String userEmail) {
-        return BookingResponse.from(cancel(findBookingForUser(bookingId, userEmail)));
+        Booking booking = findBookingForUser(bookingId, userEmail);
+        if (!booking.isCancellableByGuest(LocalDate.now())) {
+            throw new BusinessException(booking.getStatus() == BookingStatus.PENDING
+                    || booking.getStatus() == BookingStatus.CONFIRMED
+                    ? "Bookings can only be cancelled before the check-in date"
+                    : "Booking cannot be cancelled in its current status");
+        }
+        return BookingResponse.from(cancel(booking));
     }
 
     @Override
-    public PageResponse<BookingResponse> getMyBookings(String userEmail, BookingStatus status,
+    public PageResponse<BookingResponse> getMyBookings(String userEmail, List<BookingStatus> statuses,
                                                         int page, int size) {
         User user = userRepository.getByEmailOrThrow(userEmail);
         var pageable = Pagination.of(page, size, Sort.by("createdAt").descending());
 
-        var bookings = status != null
-                ? bookingRepository.findByUserIdAndStatus(user.getId(), status, pageable)
+        var bookings = statuses != null && !statuses.isEmpty()
+                ? bookingRepository.findByUserIdAndStatusIn(user.getId(), statuses, pageable)
                 : bookingRepository.findByUserId(user.getId(), pageable);
 
-        return PageResponse.from(bookings.map(BookingResponse::from));
+        return toResponses(bookings);
     }
 
     @Override
@@ -122,16 +134,14 @@ public class BookingServiceImpl implements BookingService {
             throw new BusinessException("Access denied", HttpStatus.FORBIDDEN);
         }
 
-        return BookingResponse.from(booking);
+        return BookingResponse.from(booking, reviewRepository.existsByBookingId(booking.getId()));
     }
 
     @Override
     public PageResponse<BookingResponse> getAllBookings(BookingStatus status, Long hotelId,
                                                         int page, int size) {
         var pageable = Pagination.of(page, size, Sort.by("createdAt").descending());
-        return PageResponse.from(
-                bookingRepository.findAllByFilters(status, hotelId, pageable)
-                        .map(BookingResponse::from));
+        return toResponses(bookingRepository.findAllByFilters(status, hotelId, pageable));
     }
 
     @Transactional
@@ -165,6 +175,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
+
+    /** Maps a page of bookings, looking up which ones are reviewed in a single query. */
+    private PageResponse<BookingResponse> toResponses(Page<Booking> bookings) {
+        List<Long> ids = bookings.map(Booking::getId).getContent();
+        Set<Long> reviewed = ids.isEmpty() ? Set.of() : new HashSet<>(reviewRepository.findReviewedBookingIds(ids));
+        return PageResponse.from(bookings.map(b -> BookingResponse.from(b, reviewed.contains(b.getId()))));
+    }
 
     private Booking confirm(Booking booking) {
         if (booking.getStatus() != BookingStatus.PENDING) {

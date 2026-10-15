@@ -15,6 +15,7 @@ import { BookingPage } from '@/pages/guest/BookingPage'
 import { PaymentPage } from '@/pages/guest/PaymentPage'
 import { ConfirmationPage } from '@/pages/guest/ConfirmationPage'
 import { MyBookingsPage } from '@/pages/guest/MyBookingsPage'
+import { BookingDetailPage } from '@/pages/guest/BookingDetailPage'
 import { ProfilePage } from '@/pages/guest/ProfilePage'
 import { WriteReviewPage } from '@/pages/guest/WriteReviewPage'
 
@@ -44,7 +45,7 @@ export default function App() {
               <Route path="/payment/:bookingId" element={<PaymentPage />} />
               <Route path="/confirmation/:bookingId" element={<ConfirmationPage />} />
               <Route path="/my-bookings" element={<MyBookingsPage />} />
-              <Route path="/bookings/:id" element={<MyBookingsPage />} />
+              <Route path="/bookings/:id" element={<BookingDetailPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/write-review/:bookingId" element={<WriteReviewPage />} />
             </Route>

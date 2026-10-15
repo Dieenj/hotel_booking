@@ -209,6 +209,52 @@ class BookingFlowIntegrationTest extends IntegrationTestSupport {
         assertThat(availableRooms(roomTypeId, checkIn, checkOut)).isEqualTo(3);
     }
 
+    @Test
+    void guestCannotCancelOnCheckInDayButAdminCan() throws Exception {
+        long roomTypeId = createRoomType(admin, hotelId, 1);
+        long bookingId = bookOk(guest, roomTypeId, daysFromNow(0), daysFromNow(1));
+
+        mockMvc.perform(withAuth(get("/api/bookings/" + bookingId), guest))
+                .andExpect(jsonPath("$.data.cancellable").value(false));
+        mockMvc.perform(withAuth(post("/api/bookings/" + bookingId + "/cancel"), guest))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bookings can only be cancelled before the check-in date"));
+        mockMvc.perform(withAuth(post("/api/admin/bookings/" + bookingId + "/cancel"), admin))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void futureBookingIsCancellable() throws Exception {
+        long roomTypeId = createRoomType(admin, hotelId, 1);
+        long bookingId = bookOk(guest, roomTypeId, checkIn, checkOut);
+
+        mockMvc.perform(withAuth(get("/api/bookings/" + bookingId), guest))
+                .andExpect(jsonPath("$.data.cancellable").value(true))
+                .andExpect(jsonPath("$.data.reviewed").value(false));
+    }
+
+    @Test
+    void reviewedFlagAndMultiStatusFilter() throws Exception {
+        long roomTypeId = createRoomType(admin, hotelId, 3);
+        long pending = bookOk(guest, roomTypeId, checkIn, checkOut);
+        long completed = bookOk(guest, roomTypeId, checkIn, checkOut);
+        mockMvc.perform(withAuth(post("/api/bookings/" + completed + "/pay"), guest)).andExpect(status().isOk());
+        bookingService.completeFinishedBookings(checkOut);
+        mockMvc.perform(withAuth(post("/api/reviews"), guest)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("bookingId", completed, "rating", 5))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(withAuth(get("/api/bookings/" + completed), guest))
+                .andExpect(jsonPath("$.data.reviewed").value(true))
+                .andExpect(jsonPath("$.data.cancellable").value(false));
+        mockMvc.perform(withAuth(get("/api/bookings"), guest).param("status", "COMPLETED"))
+                .andExpect(jsonPath("$.data.content[0].reviewed").value(true));
+        mockMvc.perform(withAuth(get("/api/bookings"), guest).param("status", "PENDING,CONFIRMED"))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].id").value(pending));
+    }
+
     private BookingRequest bookingRequest(long roomTypeId) {
         BookingRequest request = new BookingRequest();
         request.setRoomTypeId(roomTypeId);

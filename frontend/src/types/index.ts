@@ -113,6 +113,10 @@ export interface BookingResponse {
   guestEmail: string
   guestPhone: string | null
   createdAt: string
+  /** The guest already reviewed this stay. */
+  reviewed: boolean
+  /** The guest can still cancel (unfinished booking, before the check-in day). */
+  cancellable: boolean
 }
 
 export interface BookingRequest {

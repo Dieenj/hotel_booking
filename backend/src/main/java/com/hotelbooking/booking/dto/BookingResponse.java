@@ -31,8 +31,16 @@ public class BookingResponse {
     private String guestEmail;
     private String guestPhone;
     private LocalDateTime createdAt;
+    /** Whether the guest has already reviewed this stay. */
+    private boolean reviewed;
+    /** Whether the guest can still cancel (see {@link Booking#isCancellableByGuest}). */
+    private boolean cancellable;
 
     public static BookingResponse from(Booking booking) {
+        return from(booking, false);
+    }
+
+    public static BookingResponse from(Booking booking, boolean reviewed) {
         return BookingResponse.builder()
                 .id(booking.getId())
                 .bookingCode(booking.getBookingCode())
@@ -52,6 +60,8 @@ public class BookingResponse {
                 .guestEmail(booking.getGuestEmail())
                 .guestPhone(booking.getGuestPhone())
                 .createdAt(booking.getCreatedAt())
+                .reviewed(reviewed)
+                .cancellable(booking.isCancellableByGuest(LocalDate.now()))
                 .build();
     }
 }

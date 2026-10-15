@@ -5,24 +5,25 @@ import type { BookingResponse, BookingStatus } from '@/types'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/badge'
 import { PageSpinner } from '@/components/shared/Spinner'
+import { BookingActions } from '@/components/shared/BookingActions'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
-const TABS: { label: string; value: BookingStatus | undefined }[] = [
-  { label: 'All', value: undefined },
-  { label: 'Upcoming', value: 'CONFIRMED' },
-  { label: 'Completed', value: 'COMPLETED' },
-  { label: 'Cancelled', value: 'CANCELLED' },
+const TABS: { label: string; statuses?: BookingStatus[] }[] = [
+  { label: 'All' },
+  { label: 'Upcoming', statuses: ['PENDING', 'CONFIRMED'] },
+  { label: 'Completed', statuses: ['COMPLETED'] },
+  { label: 'Cancelled', statuses: ['CANCELLED'] },
 ]
 
 export function MyBookingsPage() {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState<BookingResponse[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<BookingStatus | undefined>(undefined)
+  const [activeTab, setActiveTab] = useState(TABS[0])
 
   const fetchBookings = useCallback(async () => {
     try {
-      const res = await bookingsApi.getMyBookings({ status: activeTab, page: 0, size: 20 })
+      const res = await bookingsApi.getMyBookings({ statuses: activeTab.statuses, page: 0, size: 20 })
       setBookings(res.content)
     } finally {
       setLoading(false)
@@ -33,16 +34,6 @@ export function MyBookingsPage() {
     fetchBookings()
   }, [fetchBookings])
 
-  async function handleCancel(bookingId: number) {
-    if (!confirm('Are you sure you want to cancel this booking?')) return
-    try {
-      await bookingsApi.cancel(bookingId)
-      fetchBookings()
-    } catch {
-      alert('Failed to cancel booking')
-    }
-  }
-
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-2xl font-bold mb-6">My Bookings</h1>
@@ -52,9 +43,9 @@ export function MyBookingsPage() {
         {TABS.map((tab) => (
           <button
             key={tab.label}
-            onClick={() => setActiveTab(tab.value)}
+            onClick={() => setActiveTab(tab)}
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              activeTab === tab.value
+              activeTab.label === tab.label
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -109,24 +100,7 @@ export function MyBookingsPage() {
               </div>
 
               <div className="flex flex-col gap-2 sm:items-end justify-center shrink-0">
-                <Button variant="outline" size="sm" onClick={() => navigate(`/bookings/${booking.id}`)}>
-                  View Details
-                </Button>
-                {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => handleCancel(booking.id)}
-                  >
-                    Cancel
-                  </Button>
-                )}
-                {booking.status === 'COMPLETED' && (
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/write-review/${booking.id}`)}>
-                    Write Review
-                  </Button>
-                )}
+                <BookingActions booking={booking} onChanged={fetchBookings} showDetails />
               </div>
             </div>
           ))}
