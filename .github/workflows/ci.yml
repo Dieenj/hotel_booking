@@ -8,6 +8,25 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      # Run the integration tests on the same database as production (H2 hides some bugs).
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: hotel_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DB_URL: jdbc:postgresql://localhost:5432/hotel_test
+      TEST_DB_USERNAME: postgres
+      TEST_DB_PASSWORD: postgres
     defaults:
       run:
         working-directory: backend

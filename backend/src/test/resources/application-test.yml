@@ -1,26 +1,25 @@
+# Tests run on in-memory H2 by default. Set TEST_DB_URL (plus TEST_DB_USERNAME/TEST_DB_PASSWORD)
+# to run the same suite against PostgreSQL, as CI does — some bugs only show up there.
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: ${TEST_DB_URL:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1}
+    username: ${TEST_DB_USERNAME:sa}
+    password: ${TEST_DB_PASSWORD:}
   jpa:
     # Same as the documented local/production config: no lazy loading outside transactions.
     open-in-view: false
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
         generate_statistics: true
+  mail:
+    host: localhost
+    port: 25
 
 logging:
   level:
     org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: WARN
-  mail:
-    host: localhost
-    port: 25
 
 app:
   jwt:

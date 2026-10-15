@@ -152,7 +152,9 @@ Scheduled jobs (disable with `app.scheduling.enabled=false`):
 ## Development
 
 ```bash
-cd backend && mvn verify          # unit + integration tests (H2, no database needed)
+cd backend && mvn verify          # integration tests on in-memory H2, no database needed
+# Same tests on PostgreSQL (what CI runs):
+# TEST_DB_URL=jdbc:postgresql://localhost:5432/hotel_test TEST_DB_USERNAME=postgres TEST_DB_PASSWORD=... mvn verify
 cd frontend && pnpm lint && pnpm build
 ```
 

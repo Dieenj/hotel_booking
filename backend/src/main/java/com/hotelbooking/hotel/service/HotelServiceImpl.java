@@ -8,6 +8,7 @@ import com.hotelbooking.hotel.dto.HotelResponse;
 import com.hotelbooking.hotel.entity.Hotel;
 import com.hotelbooking.hotel.repository.HotelMinPrice;
 import com.hotelbooking.hotel.repository.HotelRepository;
+import com.hotelbooking.hotel.repository.HotelSpecifications;
 import com.hotelbooking.hotel.repository.RoomTypeRepository;
 import com.hotelbooking.review.repository.HotelRatingSummary;
 import com.hotelbooking.review.repository.ReviewRepository;
@@ -44,7 +45,8 @@ public class HotelServiceImpl implements HotelService {
         };
 
         Pageable pageable = Pagination.of(page, size, sortObj);
-        Page<Hotel> hotels = hotelRepository.searchHotels(city, minRating, name, pageable);
+        Page<Hotel> hotels = hotelRepository.findAll(
+                HotelSpecifications.search(trimToNull(city), trimToNull(name), minRating), pageable);
 
         // Aggregate queries for the whole page instead of queries per hotel.
         List<Long> hotelIds = hotels.map(Hotel::getId).getContent();
@@ -124,6 +126,10 @@ public class HotelServiceImpl implements HotelService {
         return hotelRepository.findById(id)
                 .filter(Hotel::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel", id));
+    }
+
+    private static String trimToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     @Override

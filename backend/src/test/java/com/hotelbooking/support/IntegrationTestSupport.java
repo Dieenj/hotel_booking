@@ -74,13 +74,17 @@ public abstract class IntegrationTestSupport {
     // ── Hotels ───────────────────────────────────────────────────────────────
 
     protected long createHotel(String adminToken) throws Exception {
+        return createHotel(adminToken, "Hotel " + UUID.randomUUID(), "Hanoi");
+    }
+
+    protected long createHotel(String adminToken, String name, String city) throws Exception {
         String body = mockMvc.perform(post("/api/admin/hotels")
                         .header("Authorization", bearer(adminToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of(
-                                "name", "Hotel " + UUID.randomUUID(),
+                                "name", name,
                                 "address", "1 Test Street",
-                                "city", "Hanoi",
+                                "city", city,
                                 "starRating", 4))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
