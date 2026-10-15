@@ -5,12 +5,19 @@ spring:
     username: sa
     password:
   jpa:
+    # Same as the documented local/production config: no lazy loading outside transactions.
+    open-in-view: false
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+        generate_statistics: true
+
+logging:
+  level:
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: WARN
   mail:
     host: localhost
     port: 25

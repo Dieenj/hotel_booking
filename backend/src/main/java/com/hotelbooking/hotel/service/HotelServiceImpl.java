@@ -7,6 +7,7 @@ import com.hotelbooking.hotel.dto.HotelRequest;
 import com.hotelbooking.hotel.dto.HotelResponse;
 import com.hotelbooking.hotel.entity.Hotel;
 import com.hotelbooking.hotel.repository.HotelRepository;
+import com.hotelbooking.review.repository.HotelRatingSummary;
 import com.hotelbooking.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,9 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class HotelServiceImpl implements HotelService {
 
     private final HotelRepository hotelRepository;
@@ -36,10 +42,18 @@ public class HotelServiceImpl implements HotelService {
         Pageable pageable = Pagination.of(page, size, sortObj);
         Page<Hotel> hotels = hotelRepository.searchHotels(city, minRating, name, pageable);
 
+        // One aggregate query for the whole page instead of two queries per hotel.
+        List<Long> hotelIds = hotels.map(Hotel::getId).getContent();
+        Map<Long, HotelRatingSummary> ratings = hotelIds.isEmpty()
+                ? Map.of()
+                : reviewRepository.summarizeByHotelIds(hotelIds).stream()
+                        .collect(Collectors.toMap(HotelRatingSummary::getHotelId, Function.identity()));
+
         Page<HotelResponse> responses = hotels.map(hotel -> {
-            Double avgRating   = reviewRepository.findAverageRatingByHotelId(hotel.getId());
-            Long   reviewCount = reviewRepository.countByHotelId(hotel.getId());
-            return HotelResponse.from(hotel, avgRating, reviewCount);
+            HotelRatingSummary rating = ratings.get(hotel.getId());
+            return rating != null
+                    ? HotelResponse.from(hotel, rating.getAverageRating(), rating.getReviewCount())
+                    : HotelResponse.from(hotel, null, 0L);
         });
 
         return PageResponse.from(responses);

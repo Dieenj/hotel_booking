@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
@@ -24,4 +26,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT COUNT(r) FROM Review r WHERE r.hotel.id = :hotelId")
     long countByHotelId(@Param("hotelId") Long hotelId);
+
+    @Query("""
+            SELECT r.hotel.id AS hotelId, AVG(r.rating) AS averageRating, COUNT(r) AS reviewCount
+            FROM Review r
+            WHERE r.hotel.id IN :hotelIds
+            GROUP BY r.hotel.id
+            """)
+    List<HotelRatingSummary> summarizeByHotelIds(@Param("hotelIds") Collection<Long> hotelIds);
 }

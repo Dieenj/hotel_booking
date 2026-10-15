@@ -5,6 +5,7 @@ import com.hotelbooking.booking.enums.BookingStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -19,8 +20,12 @@ import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
+    // List queries fetch roomType + hotel up front: BookingResponse reads both for every row.
+
+    @EntityGraph(attributePaths = {"roomType", "roomType.hotel"})
     Page<Booking> findByUserId(Long userId, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"roomType", "roomType.hotel"})
     Page<Booking> findByUserIdAndStatus(Long userId, BookingStatus status, Pageable pageable);
 
     Optional<Booking> findByBookingCode(String bookingCode);
@@ -38,11 +43,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Booking> findByStatusInAndCheckOutLessThanEqual(Collection<BookingStatus> statuses, LocalDate date);
 
+    @EntityGraph(attributePaths = {"roomType", "roomType.hotel"})
     @Query("""
             SELECT b FROM Booking b
             WHERE (:status IS NULL OR b.status = :status)
             AND (:hotelId IS NULL OR b.roomType.hotel.id = :hotelId)
-            ORDER BY b.createdAt DESC
             """)
     Page<Booking> findAllByFilters(
             @Param("status") BookingStatus status,
@@ -57,5 +62,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     BigDecimal sumRevenueSince(@Param("startDate") LocalDateTime startDate,
                                @Param("statuses") Collection<BookingStatus> statuses);
 
+    @EntityGraph(attributePaths = {"roomType", "roomType.hotel"})
     List<Booking> findTop10ByOrderByCreatedAtDesc();
 }

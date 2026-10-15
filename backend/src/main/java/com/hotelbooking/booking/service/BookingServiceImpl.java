@@ -30,6 +30,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
 
     /** Statuses of bookings that are paid and still hold their rooms. */
