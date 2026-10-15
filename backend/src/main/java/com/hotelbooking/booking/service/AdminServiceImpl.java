@@ -1,6 +1,7 @@
 package com.hotelbooking.booking.service;
 
 import com.hotelbooking.booking.dto.DashboardStats;
+import com.hotelbooking.booking.enums.BookingStatus;
 import com.hotelbooking.booking.repository.BookingRepository;
 import com.hotelbooking.hotel.repository.HotelRepository;
 import lombok.RequiredArgsConstructor;
@@ -8,10 +9,14 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class AdminServiceImpl implements AdminService {
+
+    private static final List<BookingStatus> REVENUE_STATUSES =
+            List.of(BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN, BookingStatus.COMPLETED);
 
     private final BookingRepository bookingRepository;
     private final HotelRepository hotelRepository;
@@ -22,7 +27,7 @@ public class AdminServiceImpl implements AdminService {
                 .withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
 
         long totalBookings = bookingRepository.countActiveBookingsSince(startOfMonth);
-        BigDecimal revenue = bookingRepository.sumRevenueSince(startOfMonth);
+        BigDecimal revenue = bookingRepository.sumRevenueSince(startOfMonth, REVENUE_STATUSES);
         long totalHotels   = hotelRepository.count();
 
         var recentBookings = bookingRepository.findTop10ByOrderByCreatedAtDesc().stream()

@@ -31,7 +31,7 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         if (checkIn != null && checkOut != null) {
             return roomTypes.stream()
                     .map(rt -> RoomTypeResponse.from(rt,
-                            availabilityService.getAvailableRooms(rt.getId(), checkIn, checkOut)))
+                            availabilityService.getAvailableRooms(rt, checkIn, checkOut)))
                     .toList();
         }
 
@@ -73,7 +73,10 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         roomType.setMaxCapacity(request.getMaxCapacity());
         roomType.setArea(request.getArea());
         roomType.setBasePrice(request.getBasePrice());
-        roomType.setTotalRooms(request.getTotalRooms());
+        if (!request.getTotalRooms().equals(roomType.getTotalRooms())) {
+            availabilityService.updateTotalRooms(roomType, request.getTotalRooms());
+            roomType.setTotalRooms(request.getTotalRooms());
+        }
         if (request.getAmenities() != null) roomType.setAmenities(request.getAmenities());
         if (request.getImages() != null)    roomType.setImages(request.getImages());
 
@@ -91,7 +94,7 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     @Override
     public RoomType findActiveRoomTypeById(Long id) {
         return roomTypeRepository.findById(id)
-                .filter(RoomType::isActive)
+                .filter(rt -> rt.isActive() && rt.getHotel().isActive())
                 .orElseThrow(() -> new ResourceNotFoundException("RoomType", id));
     }
 }

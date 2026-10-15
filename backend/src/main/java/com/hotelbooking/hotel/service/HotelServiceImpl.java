@@ -92,6 +92,7 @@ public class HotelServiceImpl implements HotelService {
     public void deleteHotel(Long id) {
         Hotel hotel = findActiveHotelById(id);
         hotel.setActive(false);
+        hotel.getRoomTypes().forEach(roomType -> roomType.setActive(false));
         hotelRepository.save(hotel);
     }
 
