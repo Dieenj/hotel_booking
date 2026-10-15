@@ -22,7 +22,7 @@ export function SearchPage() {
   const [cityInput, setCityInput] = useState(searchParams.get('city') || '')
   const [nameInput, setNameInput] = useState(searchParams.get('name') || '')
   const [minRating, setMinRating] = useState<number | undefined>(undefined)
-  const [sort, setSort] = useState('price,asc')
+  const [sort, setSort] = useState('newest')
 
   const SIZE = 9
 
@@ -131,9 +131,9 @@ export function SearchPage() {
                 value={sort}
                 onChange={(e) => { setSort(e.target.value); setPage(0) }}
               >
-                <option value="price,asc">Price: Low to High</option>
-                <option value="price,desc">Price: High to Low</option>
-                <option value="starRating,desc">Star Rating</option>
+                <option value="newest">Newest</option>
+                <option value="rating_desc">Star Rating</option>
+                <option value="name_asc">Name (A–Z)</option>
               </select>
             </div>
           </div>
@@ -199,12 +199,15 @@ export function SearchPage() {
                           </span>
                         ))}
                       </div>
-                      <div className="text-right shrink-0 ml-4">
-                        <span className="text-xl font-bold text-primary">
-                          {formatCurrency(189)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">/night</span>
-                      </div>
+                      {hotel.minPrice != null && (
+                        <div className="text-right shrink-0 ml-4">
+                          <span className="text-xs text-muted-foreground">from </span>
+                          <span className="text-xl font-bold text-primary">
+                            {formatCurrency(hotel.minPrice)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">/night</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

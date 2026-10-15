@@ -6,7 +6,9 @@ import com.hotelbooking.common.response.Pagination;
 import com.hotelbooking.hotel.dto.HotelRequest;
 import com.hotelbooking.hotel.dto.HotelResponse;
 import com.hotelbooking.hotel.entity.Hotel;
+import com.hotelbooking.hotel.repository.HotelMinPrice;
 import com.hotelbooking.hotel.repository.HotelRepository;
+import com.hotelbooking.hotel.repository.RoomTypeRepository;
 import com.hotelbooking.review.repository.HotelRatingSummary;
 import com.hotelbooking.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +32,7 @@ public class HotelServiceImpl implements HotelService {
 
     private final HotelRepository hotelRepository;
     private final ReviewRepository reviewRepository;
+    private final RoomTypeRepository roomTypeRepository;
 
     @Override
     public PageResponse<HotelResponse> searchHotels(String city, Integer minRating, String name,
@@ -42,18 +46,23 @@ public class HotelServiceImpl implements HotelService {
         Pageable pageable = Pagination.of(page, size, sortObj);
         Page<Hotel> hotels = hotelRepository.searchHotels(city, minRating, name, pageable);
 
-        // One aggregate query for the whole page instead of two queries per hotel.
+        // Aggregate queries for the whole page instead of queries per hotel.
         List<Long> hotelIds = hotels.map(Hotel::getId).getContent();
         Map<Long, HotelRatingSummary> ratings = hotelIds.isEmpty()
                 ? Map.of()
                 : reviewRepository.summarizeByHotelIds(hotelIds).stream()
                         .collect(Collectors.toMap(HotelRatingSummary::getHotelId, Function.identity()));
+        Map<Long, BigDecimal> minPrices = hotelIds.isEmpty()
+                ? Map.of()
+                : roomTypeRepository.findMinPricesByHotelIds(hotelIds).stream()
+                        .collect(Collectors.toMap(HotelMinPrice::getHotelId, HotelMinPrice::getMinPrice));
 
         Page<HotelResponse> responses = hotels.map(hotel -> {
             HotelRatingSummary rating = ratings.get(hotel.getId());
-            return rating != null
-                    ? HotelResponse.from(hotel, rating.getAverageRating(), rating.getReviewCount())
-                    : HotelResponse.from(hotel, null, 0L);
+            return HotelResponse.from(hotel,
+                    rating != null ? rating.getAverageRating() : null,
+                    rating != null ? rating.getReviewCount() : 0L,
+                    minPrices.get(hotel.getId()));
         });
 
         return PageResponse.from(responses);

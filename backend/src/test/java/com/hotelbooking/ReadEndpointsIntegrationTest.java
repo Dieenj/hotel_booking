@@ -55,7 +55,10 @@ class ReadEndpointsIntegrationTest extends IntegrationTestSupport {
 
     @Test
     void publicReadEndpointsWork() throws Exception {
-        mockMvc.perform(get("/api/hotels")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/hotels").param("size", "100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[?(@.id == " + hotelId + ")].minPrice").value(100.0))
+                .andExpect(jsonPath("$.data.content[?(@.id == " + hotelId + ")].reviewCount").value(1));
         mockMvc.perform(get("/api/hotels/" + hotelId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.reviewCount").value(1))
@@ -114,8 +117,8 @@ class ReadEndpointsIntegrationTest extends IntegrationTestSupport {
         long queries = countQueries(() -> mockMvc.perform(get("/api/hotels").param("size", "20"))
                 .andExpect(status().isOk()));
 
-        // page + count + rating summary + batched element collections; not 2 queries per hotel.
-        assertThat(queries).isLessThanOrEqualTo(6);
+        // page + count + rating summary + min price + batched element collections; not per hotel.
+        assertThat(queries).isLessThanOrEqualTo(7);
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.hotelbooking.hotel.entity.Hotel;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class HotelResponse {
     private boolean active;
     private Double averageRating;
     private Long reviewCount;
+    private BigDecimal minPrice;
     private LocalDateTime createdAt;
 
     public static HotelResponse from(Hotel hotel) {
@@ -41,6 +43,10 @@ public class HotelResponse {
     }
 
     public static HotelResponse from(Hotel hotel, Double averageRating, Long reviewCount) {
+        return from(hotel, averageRating, reviewCount, null);
+    }
+
+    public static HotelResponse from(Hotel hotel, Double averageRating, Long reviewCount, BigDecimal minPrice) {
         return HotelResponse.builder()
                 .id(hotel.getId())
                 .name(hotel.getName())
@@ -54,6 +60,7 @@ public class HotelResponse {
                 .active(hotel.isActive())
                 .averageRating(averageRating)
                 .reviewCount(reviewCount)
+                .minPrice(minPrice)
                 .createdAt(hotel.getCreatedAt())
                 .build();
     }

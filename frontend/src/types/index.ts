@@ -45,6 +45,8 @@ export interface HotelResponse {
   active: boolean
   averageRating?: number | null
   reviewCount?: number | null
+  /** Cheapest active room type's nightly price; only set in search results. */
+  minPrice?: number | null
   createdAt: string
 }
 
